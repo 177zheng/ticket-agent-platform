@@ -37,6 +37,12 @@ app:
     chunk-size: 400          # 运维手册分块字符数
     chunk-overlap: 80        # 相邻块重叠字符数
     top-k: 3                 # 检索返回条数
+  security:
+    secret: ${JWT_SECRET:change-me-in-production-please-use-a-long-random-secret-key}
+    token-ttl-hours: 12
+    cors-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173
 
 logging:
   level:

@@ -41,7 +41,7 @@
       </el-table>
     </el-card>
 
-    <!-- 新建工单 -->
+    <!-- 新建工单（提单人取自登录态，无需填写） -->
     <el-dialog v-model="dlg" title="新建工单" width="560px">
       <el-form :model="form" label-width="80px">
         <el-form-item label="标题" required>
@@ -49,13 +49,7 @@
         </el-form-item>
         <el-form-item label="问题描述" required>
           <el-input v-model="form.description" type="textarea" :rows="4"
-                    placeholder="现象、发生时间、影响范围…" />
-        </el-form-item>
-        <el-form-item label="提单人" required>
-          <el-input v-model="form.requesterName" />
-        </el-form-item>
-        <el-form-item label="联系邮箱" required>
-          <el-input v-model="form.requesterEmail" />
+                    placeholder="现象、发生时间、影响范围…（提单人：登录账号自动关联）" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -70,7 +64,7 @@
         <el-alert v-if="current.errorMessage" type="error" :closable="false" show-icon
                   :title="`失败阶段 ${current.failedStep}`" :description="current.errorMessage" style="margin-bottom:12px" />
 
-        <div class="actions">
+        <div class="actions" v-if="isAdmin()">
           <el-button v-if="current.status === 'HUMAN_REVIEW'" type="success"
                      @click="review(true)">✓ 审核通过并发送回复</el-button>
           <el-button v-if="current.status === 'HUMAN_REVIEW'" type="warning" plain
@@ -143,6 +137,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
 import { STATUS_LABEL, STATUS_TAG, PRIORITY_LABEL, isTerminal, fmtTime } from '../constants'
+import { isAdmin } from '../auth'
 
 const tickets = ref([])
 const loading = ref(false)
@@ -152,7 +147,7 @@ const filtered = computed(() =>
 
 const dlg = ref(false)
 const submitting = ref(false)
-const form = ref({ title: '', description: '', requesterName: '', requesterEmail: '' })
+const form = ref({ title: '', description: '' })
 
 const drawer = ref(false)
 const current = ref(null)
@@ -173,8 +168,8 @@ async function fetchList() {
 }
 
 async function create() {
-  if (!form.value.title || !form.value.description || !form.value.requesterName || !form.value.requesterEmail) {
-    ElMessage.warning('请填写完整（标题/描述/提单人/邮箱）')
+  if (!form.value.title || !form.value.description) {
+    ElMessage.warning('请填写标题和问题描述')
     return
   }
   submitting.value = true
@@ -182,7 +177,7 @@ async function create() {
     await api.post('/tickets', form.value)
     ElMessage.success('工单已创建，智能体流水线已启动')
     dlg.value = false
-    form.value = { title: '', description: '', requesterName: '', requesterEmail: '' }
+    form.value = { title: '', description: '' }
     fetchList()
   } catch (e) {
     ElMessage.error(e.message)

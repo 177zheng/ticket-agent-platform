@@ -39,7 +39,23 @@ java -jar target/ticket-agent-platform-0.1.0-SNAPSHOT.jar
 # 打开 http://127.0.0.1:8080 （前端+后端同一个进程）
 ```
 
-首次启动自动灌入 6 篇运维手册 + 6 条历史工单。
+首次启动自动灌入 **默认管理员 + 6 篇运维手册 + 6 条历史工单**。
+
+### 登录与权限
+
+- **管理员**：用户名 `admin`，密码 `admin123`（系统预置，注册接口不开放管理员角色——即使请求里带 `role=ADMIN` 也会被强制为员工）
+- **员工**：登录页点「注册员工账号」自助注册
+
+| 能力 | 员工 EMPLOYEE | 管理员 ADMIN |
+|---|---|---|
+| 提交工单（触发 Agent 流水线） | ✅ | ✅ |
+| 查看工单 | 仅自己提交的 | 全量 |
+| 仪表盘统计 | 仅自己的数据（scope=MINE） | 全局（scope=ALL） |
+| 人工审核/驳回回复草稿 | ❌ 403 | ✅ |
+| 失败工单断点重试 / 关闭转人工工单 | ❌ 403 | ✅ |
+| 知识库导入/检索（页面与接口） | ❌ 403 | ✅ |
+
+技术实现：Spring Security 无状态会话 + 手写 HS256 JWT（零第三方依赖）+ `@PreAuthorize` 方法级权限 + 前端路由守卫与按角色渲染；密码 BCrypt 哈希存储；提单人信息取自登录态、后端写入，客户端不可伪造。
 
 ### 前端开发模式（热更新）
 
@@ -78,6 +94,9 @@ java -jar target/*.jar --spring.profiles.active=postgres
 | POST | `/api/knowledge/manual` | 导入运维手册 `{title, content}`（自动切块） |
 | GET | `/api/knowledge/manuals` / `/search?q=` | 手册列表 / 检索调试 |
 | GET | `/api/meta` | 运行元信息（LLM 模式等） |
+| POST | `/api/auth/register` | 员工自助注册（角色强制 EMPLOYEE） |
+| POST | `/api/auth/login` | 登录，返回 JWT + 用户信息 |
+| GET | `/api/auth/me` | 当前登录人信息 |
 
 ## 目录结构
 
@@ -89,11 +108,12 @@ ticket-agent-platform/
 │   ├── domain/       Ticket / TicketStatus(状态机) / TicketEvent(审计) / KnowledgeChunk
 │   ├── llm/          OpenAI 兼容客户端（重试）+ JSON 容错解析
 │   ├── service/      知识库RAG / 状态流转服务(统一入口) / 邮件 / 种子数据
-│   ├── web/          REST 控制器 + 全局异常处理
+│   ├── security/     JWT(HS256手写) / 认证过滤器 / Security配置 / 当前用户
+│   ├── web/          REST 控制器 + 全局异常处理 + 认证接口
 │   └── repo/         Spring Data JPA 仓库
 ├── src/main/resources/static/   前端构建产物（npm run build 输出）
 └── frontend/                    Vue3 前端源码（Vite + Element Plus + ECharts）
-    └── src/views/               Dashboard / Tickets / Knowledge 三个页面
+    └── src/views/               Dashboard / Tickets / Knowledge / Login / Register
 ```
 
 ## 简历 / 面试亮点
@@ -102,6 +122,7 @@ ticket-agent-platform/
 - **状态机驱动的业务闭环**：工单 8 状态全流转经统一入口校验（非法流转直接拒绝），每次变化写审计事件表，前端时间线完整回放"谁在何时做了什么"
 - **LLM 工程化**：OpenAI 兼容协议适配任意模型（GLM/DeepSeek/Qwen/Ollama）；指数退避重试 + 4xx 快速失败；结构化输出容错解析；**Mock 模式**让系统无 API Key 也能完整演示（这也是单测/演示的依赖隔离手段）
 - **RAG 检索**：手册自动切块（固定窗口+重叠），中文 bigram 分词相似度检索，历史工单案例检索为回复提供依据；接口抽象预留 pgvector/ES 升级路径
+- **登录鉴权与角色权限**：JWT 无状态认证 + 员工/管理员双角色数据隔离与操作权限（前后端双重防护），密码 BCrypt 存储
 - **工程完整度**：前后端分离开发、同进程部署（前端构建产物打进 jar，演示零依赖）；H2 零配置起步、Profile 切 PostgreSQL；全局异常处理 + 参数校验
 
 ## 升级路线（按需）
@@ -117,4 +138,4 @@ ticket-agent-platform/
 
 - mock 模式是关键词规则引擎，会误判——接入真实 LLM 即解决（一条启动参数切换）
 - 知识库检索是字符 bigram 重叠度打分，不是语义向量检索
-- 无登录鉴权、多租户；流水线单线程顺序执行
+- 流水线单线程顺序执行；JWT 默认密钥需生产替换（`JWT_SECRET` 环境变量）

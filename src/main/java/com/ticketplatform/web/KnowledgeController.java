@@ -10,10 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 运维手册知识库：导入（自动切块）与检索调试。
+ * 运维手册知识库：导入（自动切块）与检索调试 —— 仅管理员。
  */
 @RestController
 @RequestMapping("/api/knowledge")
+@org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
 public class KnowledgeController {
 
     private final KnowledgeBaseService knowledgeBase;

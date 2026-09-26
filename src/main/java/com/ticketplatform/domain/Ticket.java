@@ -28,6 +28,10 @@ public class Ticket {
     @Column(nullable = false, length = 200)
     private String requesterEmail;
 
+    /** 创建人用户名（登录态写入）；种子历史工单为 null，仅管理员可见 */
+    @Column(length = 30)
+    private String createdBy;
+
     // ---- 规划 Agent 产出 ----
     private String category;
     @Enumerated(EnumType.STRING)
@@ -91,6 +95,9 @@ public class Ticket {
 
     public String getRequesterEmail() { return requesterEmail; }
     public void setRequesterEmail(String requesterEmail) { this.requesterEmail = requesterEmail; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }

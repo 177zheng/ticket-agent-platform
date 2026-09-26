@@ -11,10 +11,12 @@ public class AppProperties {
     private final Llm llm = new Llm();
     private final Pipeline pipeline = new Pipeline();
     private final Knowledge knowledge = new Knowledge();
+    private final Security security = new Security();
 
     public Llm getLlm() { return llm; }
     public Pipeline getPipeline() { return pipeline; }
     public Knowledge getKnowledge() { return knowledge; }
+    public Security getSecurity() { return security; }
 
     public static class Llm {
         /** mock | openai */
@@ -63,5 +65,21 @@ public class AppProperties {
         public void setChunkOverlap(int chunkOverlap) { this.chunkOverlap = chunkOverlap; }
         public int getTopK() { return topK; }
         public void setTopK(int topK) { this.topK = topK; }
+    }
+
+    public static class Security {
+        /** HMAC 签名密钥；生产环境必须改成随机长字符串 */
+        private String secret = "change-me-in-production-please-use-a-long-random-secret-key";
+        private long tokenTtlHours = 12;
+        /** 前端 vite 开发服务器的跨域白名单 */
+        private java.util.List<String> corsOrigins =
+                java.util.List.of("http://localhost:5173", "http://127.0.0.1:5173");
+
+        public String getSecret() { return secret; }
+        public void setSecret(String secret) { this.secret = secret; }
+        public long getTokenTtlHours() { return tokenTtlHours; }
+        public void setTokenTtlHours(long tokenTtlHours) { this.tokenTtlHours = tokenTtlHours; }
+        public java.util.List<String> getCorsOrigins() { return corsOrigins; }
+        public void setCorsOrigins(java.util.List<String> corsOrigins) { this.corsOrigins = corsOrigins; }
     }
 }

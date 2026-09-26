@@ -1,16 +1,22 @@
 package com.ticketplatform.service;
 
 import com.ticketplatform.domain.Priority;
+import com.ticketplatform.domain.Role;
 import com.ticketplatform.domain.Ticket;
 import com.ticketplatform.domain.TicketStatus;
+import com.ticketplatform.domain.User;
 import com.ticketplatform.repo.TicketRepository;
+import com.ticketplatform.repo.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * 首次启动时灌入演示数据：6 篇运维手册（进知识库切块）+ 6 条历史已解决工单（供检索 Agent 找相似案例）。
+ * 首次启动时灌入演示数据：
+ * 1) 预置管理员账号（注册接口不开放管理员，只能从这里来）
+ * 2) 6 篇运维手册（进知识库切块）+ 6 条历史已解决工单（供检索 Agent 找相似案例）
  * 已有数据则跳过，不会重复导入。
  */
 @Component
@@ -19,17 +25,27 @@ public class DataSeeder implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
     private final TicketRepository ticketRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final KnowledgeBaseService knowledgeBase;
 
-    public DataSeeder(TicketRepository ticketRepository, KnowledgeBaseService knowledgeBase) {
+    public DataSeeder(TicketRepository ticketRepository, UserRepository userRepository,
+                      PasswordEncoder passwordEncoder, KnowledgeBaseService knowledgeBase) {
         this.ticketRepository = ticketRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.knowledgeBase = knowledgeBase;
     }
 
     @Override
     public void run(String... args) {
+        if (userRepository.count() == 0) {
+            userRepository.save(new User("admin",
+                    passwordEncoder.encode("admin123"), "系统管理员", "admin@corp.com", Role.ADMIN));
+            log.info("已创建默认管理员 >>>  用户名: admin  密码: admin123（仅演示环境使用）");
+        }
         if (ticketRepository.count() > 0) {
-            log.info("已有 {} 条工单，跳过种子数据", ticketRepository.count());
+            log.info("已有 {} 条工单，跳过工单种子数据", ticketRepository.count());
             return;
         }
         seedKnowledge();

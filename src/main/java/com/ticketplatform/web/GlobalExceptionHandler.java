@@ -37,6 +37,13 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", e.getReason() == null ? "请求失败" : e.getReason()));
     }
 
+    /** @PreAuthorize 拒绝：交给 Security 的语义，返回 403 而不是 500 */
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> onAccessDenied(
+            org.springframework.security.access.AccessDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "无权限执行该操作"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> onGeneric(Exception e) {
         log.error("未处理异常", e);
