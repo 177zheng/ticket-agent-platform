@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>企业工单多智能体处理平台</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; background: #f0f2f5; color: #1f2329; }
+  header { background: #1e3a8a; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 18px; font-weight: 600; }
+  .stats { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+  .chip { background: rgba(255,255,255,.15); border-radius: 14px; padding: 3px 12px; font-size: 12px; }
+  .chip b { margin-left: 4px; }
+  .layout { display: grid; grid-template-columns: 430px 1fr; gap: 16px; padding: 16px 24px; max-width: 1500px; margin: 0 auto; }
+  .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px; }
+  .card h2 { font-size: 14px; color: #6b7280; margin-bottom: 10px; font-weight: 600; }
+  label { font-size: 12px; color: #6b7280; display: block; margin: 8px 0 4px; }
+  input, textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 7px 10px; font-size: 13px; font-family: inherit; }
+  textarea { resize: vertical; min-height: 56px; }
+  button { border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+  .btn-primary { background: #2563eb; color: #fff; width: 100%; margin-top: 12px; }
+  .btn-primary:hover { background: #1d4ed8; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: #6b7280; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; font-size: 12px; }
+  td { padding: 8px; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+  tr:hover td { background: #f8fafc; }
+  tr.active td { background: #eff6ff; }
+  .badge { display: inline-block; border-radius: 10px; padding: 2px 10px; font-size: 12px; white-space: nowrap; }
+  .st-NEW{background:#e5e7eb;color:#374151} .st-TRIAGING,.st-RETRIEVING,.st-DRAFTING{background:#dbeafe;color:#1d4ed8}
+  .st-HUMAN_REVIEW{background:#fef3c7;color:#b45309} .st-RESOLVED{background:#d1fae5;color:#047857}
+  .st-ESCALATED{background:#fce7f3;color:#9d174d} .st-FAILED{background:#fee2e2;color:#b91c1c}
+  .pr-LOW{background:#f3f4f6;color:#6b7280} .pr-MEDIUM{background:#e0f2fe;color:#0369a1}
+  .pr-HIGH{background:#ffedd5;color:#c2410c} .pr-URGENT{background:#fee2e2;color:#b91c1c;font-weight:700}
+  .detail h2 { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px 16px; margin: 12px 0; font-size: 13px; }
+  .kv .k { color: #9ca3af; font-size: 12px; }
+  .kv .v { font-weight: 500; word-break: break-all; }
+  section.block { border-top: 1px dashed #e5e7eb; padding-top: 10px; margin-top: 10px; }
+  section.block h3 { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+  ol.subtasks { padding-left: 20px; font-size: 13px; }
+  ol.subtasks li { margin: 3px 0; }
+  pre.draft { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; font-size: 13px; white-space: pre-wrap; font-family: inherit; line-height: 1.7; }
+  .hit { font-size: 12.5px; background: #f8fafc; border-left: 3px solid #93c5fd; padding: 6px 10px; margin: 6px 0; border-radius: 0 6px 6px 0; }
+  .hit .src { color: #2563eb; font-weight: 600; }
+  .actions { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+  .btn-ok { background: #059669; color: #fff; } .btn-ok:hover{background:#047857}
+  .btn-no { background: #e5e7eb; color: #374151; } .btn-no:hover{background:#d1d5db}
+  .btn-warn { background: #d97706; color: #fff; }
+  .timeline { list-style: none; font-size: 12.5px; }
+  .timeline li { padding: 6px 0 6px 14px; border-left: 2px solid #e5e7eb; position: relative; }
+  .timeline li::before { content: ""; position: absolute; left: -5px; top: 11px; width: 8px; height: 8px; border-radius: 50%; background: #2563eb; }
+  .timeline .t { color: #9ca3af; margin-right: 8px; font-size: 11px; }
+  .timeline .actor { color: #7c3aed; font-weight: 600; }
+  .timeline .note { color: #4b5563; display: block; margin-top: 2px; }
+  .empty { color: #9ca3af; text-align: center; padding: 40px 0; font-size: 13px; }
+  .error-msg { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 12px; font-size: 13px; margin-top: 8px; }
+  #formMsg { font-size: 12px; margin-top: 6px; color: #059669; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎫 企业工单多智能体处理平台</h1>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="layout">
+  <div style="display:flex; flex-direction:column; gap:16px;">
+    <div class="card">
+      <h2>提交新工单</h2>
+      <label>标题</label>
+      <input id="f_title" placeholder="例：无法登录 OA 系统">
+      <label>问题描述</label>
+      <textarea id="f_desc" placeholder="尽量描述现象、发生时间、影响范围…"></textarea>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1"><label>提单人</label><input id="f_name" value="演示用户"></div>
+        <div style="flex:1.4"><label>联系邮箱</label><input id="f_email" value="demo@corp.com"></div>
+      </div>
+      <button class="btn-primary" onclick="createTicket()">提交（自动触发智能体流水线）</button>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>工单列表 <span id="total" style="color:#2563eb"></span></h2>
+      <table>
+        <thead><tr><th>#</th><th>标题</th><th>类别</th><th>优先级</th><th>状态</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card detail" id="detail"><div class="empty">← 点击左侧工单查看详情与流转时间线</div></div>
+</div>
+
+<script>
+const STATUS = {NEW:"待处理",TRIAGING:"分类中",RETRIEVING:"检索中",DRAFTING:"生成回复中",HUMAN_REVIEW:"待人工审核",RESOLVED:"已解决",ESCALATED:"已转人工",FAILED:"处理失败"};
+const PRI = {LOW:"低",MEDIUM:"中",HIGH:"高",URGENT:"紧急"};
+const fmt = t => t ? t.replace('T',' ').slice(0,19) : '-';
+let currentId = null, tickets = [];
+
+async function api(url, opt) {
+  const r = await fetch(url, opt ? {headers:{'Content-Type':'application/json'}, ...opt} : undefined);
+  const data = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(data.error || r.status);
+  return data;
+}
+
+async function refresh() {
+  try {
+    [tickets, ] = await Promise.all([api('/api/tickets'), api('/api/tickets/stats').then(renderStats)]);
+    const tb = document.getElementById('tbody');
+    tb.innerHTML = tickets.map(t => `<tr class="${t.id===currentId?'active':''}" onclick="showDetail(${t.id})">
+      <td>${t.id}</td><td>${esc(t.title)}</td>
+      <td>${t.category?esc(t.category):'-'}</td>
+      <td>${t.priority?`<span class="badge pr-${t.priority}">${PRI[t.priority]}</span>`:'-'}</td>
+      <td><span class="badge st-${t.status}">${STATUS[t.status]}</span></td></tr>`).join('')
+      || '<tr><td colspan="5" class="empty">暂无工单，提交一个试试</td></tr>';
+    document.getElementById('total').textContent = '(' + tickets.length + ')';
+    if (currentId && tickets.some(t=>t.id===currentId && !isTerminal(t.status))) showDetail(currentId, true);
+  } catch (e) { console.error(e); }
+}
+
+function isTerminal(s){ return s==='RESOLVED'; }
+
+function renderStats(s) {
+  document.getElementById('stats').innerHTML =
+    `<span class="chip">总工单<b>${s.total}</b></span>` +
+    ['HUMAN_REVIEW','RESOLVED','ESCALATED','FAILED'].filter(k=>s.byStatus[k]>0)
+    .map(k=>`<span class="chip">${STATUS[k]}<b>${s.byStatus[k]}</b></span>`).join('');
+}
+
+async function createTicket() {
+  const body = {title:val('f_title'),description:val('f_desc'),requesterName:val('f_name'),requesterEmail:val('f_email')};
+  const msg = document.getElementById('formMsg');
+  try {
+    const t = await api('/api/tickets',{method:'POST',body:JSON.stringify(body)});
+    msg.style.color='#059669'; msg.textContent = `工单#${t.id} 已创建，智能体流水线已启动…`;
+    ['f_title','f_desc'].forEach(i=>document.getElementById(i).value='');
+    refresh(); setTimeout(()=>{msg.textContent='';},4000);
+  } catch(e) { msg.style.color='#b91c1c'; msg.textContent = '创建失败：'+e.message; }
+}
+
+async function showDetail(id, silent) {
+  currentId = id;
+  let t;
+  try { t = await api('/api/tickets/'+id); } catch(e){ return; }
+  document.querySelectorAll('#tbody tr').forEach(r=>r.classList.remove('active'));
+  const el = document.getElementById('detail');
+  const acts = [];
+  if (t.status==='HUMAN_REVIEW') {
+    acts.push(`<button class="btn-ok" onclick="review(${t.id},true)">✓ 审核通过并发送回复</button>`);
+    acts.push(`<button class="btn-no" onclick="review(${t.id},false)">✗ 驳回，转人工处理</button>`);
+  }
+  if (t.status==='FAILED') acts.push(`<button class="btn-warn" onclick="retry(${t.id})">⟳ 重试（从 ${t.failedStep} 断点续跑）</button>`);
+  if (t.status==='ESCALATED') acts.push(`<button class="btn-ok" onclick="closeTicket(${t.id})">人工已处理，关闭工单</button>`);
+
+  el.innerHTML = `
+    <h2>#${t.id} ${esc(t.title)} <span class="badge st-${t.status}">${STATUS[t.status]}</span>
+      ${t.priority?`<span class="badge pr-${t.priority}">优先级：${PRI[t.priority]}</span>`:''}</h2>
+    <div class="kv">
+      <div><div class="k">提单人</div><div class="v">${esc(t.requesterName)}（${esc(t.requesterEmail)}）</div></div>
+      <div><div class="k">类别 / 处理组</div><div class="v">${t.category?esc(t.category)+' / '+esc(t.assignedTeam):'-'}</div></div>
+      <div><div class="k">分诊置信度</div><div class="v">${t.triageConfidence??'-'}</div></div>
+      <div><div class="k">创建时间</div><div class="v">${fmt(t.createdAt)}</div></div>
+    </div>
+    <div class="hit" style="border-left-color:#cbd5e1">${esc(t.description)}</div>
+    ${t.errorMessage?`<div class="error-msg">失败阶段 <b>${t.failedStep}</b>：${esc(t.errorMessage)}</div>`:''}
+    ${acts.length?`<div class="actions">${acts.join('')}</div>`:''}
+
+    ${t.triageSummary?`<section class="block"><h3>🧭 规划 Agent · 分诊结论</h3>
+      <div class="hit">${esc(t.triageSummary)}</div>
+      ${t.subtasks&&t.subtasks.length?`<ol class="subtasks">${t.subtasks.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>`:''}
+    </section>`:''}
+
+    ${(t.manuals&&t.manuals.length)||(t.similarTickets&&t.similarTickets.length)?`<section class="block"><h3>🔍 检索 Agent · 知识库命中</h3>
+      ${t.manuals.map(m=>`<div class="hit"><span class="src">《${esc(m.sourceTitle)}》</span><br>${esc(m.snippet)}</div>`).join('')}
+      ${t.similarTickets.map(s=>`<div class="hit"><span class="src">相似工单 #${s.ticketId}</span> ${esc(s.title)}<br>解决方式：${esc(s.resolution)}</div>`).join('')}
+    </section>`:''}
+
+    ${t.replyDraft?`<section class="block"><h3>✉️ 回复 Agent · 草稿（建议：${t.suggestedActionLabel||'-'}，置信度 ${t.replyConfidence??'-'}）</h3>
+      <pre class="draft">${esc(t.replyDraft)}</pre>
+    </section>`:''}
+
+    <section class="block"><h3>📜 流转时间线</h3>
+      <ul class="timeline">${t.events.map(e=>`<li><span class="t">${fmt(e.createdAt)}</span>
+        <span class="actor">${e.actor}</span> ${e.fromStatus==='NONE'?'':STATUS[e.fromStatus]+' → '}${STATUS[e.toStatus]}
+        ${e.note?`<span class="note">${esc(e.note)}</span>`:''}</li>`).join('')}</ul>
+    </section>`;
+  if (!silent) refresh();
+}
+
+async function review(id, approve) {
+  const c = prompt(approve ? '审核意见（可留空）：' : '驳回原因（可留空）：') ?? '';
+  try { await api(`/api/tickets/${id}/review`,{method:'POST',body:JSON.stringify({approve,comment:c})}); showDetail(id); } catch(e){ alert(e.message); }
+}
+async function retry(id){ try { await api(`/api/tickets/${id}/retry`,{method:'POST'}); showDetail(id); } catch(e){ alert(e.message); } }
+async function closeTicket(id){ try { await api(`/api/tickets/${id}/close`,{method:'POST',body:JSON.stringify({comment:'人工处理完毕'})}); showDetail(id); } catch(e){ alert(e.message); } }
+
+const val = i => document.getElementById(i).value.trim();
+const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>

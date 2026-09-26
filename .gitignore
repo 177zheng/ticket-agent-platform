@@ -1,0 +1,17 @@
+# 构建产物
+target/
+
+# 运行时数据（H2 数据库）
+data/
+
+# 日志
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# 系统
+.DS_Store
+Thumbs.db

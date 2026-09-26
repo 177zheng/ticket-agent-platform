@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ticket-agent-platform
+  datasource:
+    # 文件版 H2：重启不丢数据，零配置；数据落在 ./data/ticketdb.mv.db
+    url: jdbc:h2:file:./data/ticketdb;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+app:
+  llm:
+    # mock  = 内置规则引擎模拟三个 Agent，无需 API Key 即可完整跑通全流程
+    # openai = 任意 OpenAI 兼容接口（智谱 GLM / DeepSeek / Qwen / OpenAI ...）
+    mode: mock
+    base-url: https://open.bigmodel.cn/api/paas/v4
+    api-key: ${LLM_API_KEY:}
+    model: glm-4.6
+    temperature: 0.2
+    max-tokens: 1024
+    timeout-seconds: 60
+  pipeline:
+    retry-attempts: 3        # LLM 调用失败重试次数
+    retry-backoff-ms: 800    # 重试退避基数（指数退避）
+  knowledge:
+    chunk-size: 400          # 运维手册分块字符数
+    chunk-overlap: 80        # 相邻块重叠字符数
+    top-k: 3                 # 检索返回条数
+
+logging:
+  level:
+    com.ticketplatform: DEBUG
+    org.hibernate.SQL: warn
+
+---
+# 切换 PostgreSQL：--spring.profiles.active=postgres
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ticketdb
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER:ticket}
+    password: ${DB_PASSWORD:ticket}
+  jpa:
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: false
