@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -76,6 +77,22 @@ public class KnowledgeBaseService {
                 .limit(topK)
                 .map(s -> new RetrievalResult.ManualHit(s.c().getSourceTitle(), snippet(s.c().getContent())))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listManuals() {
+        Map<String, Long> counts = new java.util.LinkedHashMap<>();
+        Map<String, java.time.LocalDateTime> latest = new java.util.LinkedHashMap<>();
+        for (KnowledgeChunk c : chunkRepository.findAll()) {
+            counts.merge(c.getSourceTitle(), 1L, Long::sum);
+            latest.merge(c.getSourceTitle(), c.getCreatedAt(),
+                    (a, b) -> a.isAfter(b) ? a : b);
+        }
+        List<Map<String, Object>> result = new ArrayList<>();
+        counts.forEach((title, n) -> result.add(Map.of(
+                "title", title, "chunks", n, "createdAt",
+                latest.getOrDefault(title, java.time.LocalDateTime.now()).toString())));
+        return result;
     }
 
     private static String snippet(String content) {

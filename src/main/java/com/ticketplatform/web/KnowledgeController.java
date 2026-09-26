@@ -28,6 +28,11 @@ public class KnowledgeController {
         return Map.of("title", req.title(), "chunks", chunks);
     }
 
+    @GetMapping("/manuals")
+    public List<Map<String, Object>> manuals() {
+        return knowledgeBase.listManuals();
+    }
+
     @GetMapping("/search")
     public List<RetrievalResult.ManualHit> search(@RequestParam String q,
                                                   @RequestParam(defaultValue = "3") int k) {

@@ -135,6 +135,12 @@ public class TicketController {
             byStatus.put(s.name(), ticketRepository.countByStatus(s));
         }
         result.put("byStatus", byStatus);
+        // Agent 分诊的类别分布（仪表盘图表用）
+        Map<String, Long> byCategory = new LinkedHashMap<>();
+        ticketRepository.findAll().forEach(t -> {
+            if (t.getCategory() != null) byCategory.merge(t.getCategory(), 1L, Long::sum);
+        });
+        result.put("byCategory", byCategory);
         return result;
     }
 
