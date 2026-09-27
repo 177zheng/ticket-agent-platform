@@ -1,0 +1,19 @@
+# 测试环境：内存 H2（不碰开发库 data/ticketdb），每次上下文重建表
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create
+    open-in-view: false
+
+app:
+  llm:
+    mode: mock   # 测试用规则引擎，不依赖任何外部 API
+
+logging:
+  level:
+    com.ticketplatform: warn

@@ -22,6 +22,7 @@ public final class Tokenizer {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             if (isCjk(c)) {
+                flushLatin(tokens, latin); // 遇到中文先结算英文缓冲，避免 ERP系统500 黏成 erp500
                 // 中文 bigram
                 if (i + 1 < s.length() && isCjk(s.charAt(i + 1))) {
                     tokens.add(s.substring(i, i + 2));
@@ -30,15 +31,19 @@ public final class Tokenizer {
                 }
             } else if (Character.isLetterOrDigit(c)) {
                 latin.append(c);
-            } else if (latin.length() > 0) {
-                tokens.add(latin.toString());
-                latin.setLength(0);
+            } else {
+                flushLatin(tokens, latin);
             }
         }
+        flushLatin(tokens, latin);
+        return tokens;
+    }
+
+    private static void flushLatin(Set<String> tokens, StringBuilder latin) {
         if (latin.length() > 0) {
             tokens.add(latin.toString());
+            latin.setLength(0);
         }
-        return tokens;
     }
 
     private static boolean isCjk(char c) {
