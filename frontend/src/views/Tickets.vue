@@ -118,6 +118,13 @@
           <div class="block draft">{{ current.replyDraft }}</div>
         </template>
 
+        <template v-if="current.resolution">
+          <h4>✅ 最终处理方案
+            <el-tag size="small" type="success">已记入知识回流，供后续相似工单检索</el-tag>
+          </h4>
+          <div class="block resolved">{{ current.resolution }}</div>
+        </template>
+
         <h4>📜 流转时间线</h4>
         <el-timeline style="padding-left:4px">
           <el-timeline-item v-for="(e, i) in current.events" :key="i" :timestamp="fmtTime(e.createdAt)"
@@ -216,10 +223,12 @@ async function retry() {
 
 async function closeTicket() {
   try {
-    const { value } = await ElMessageBox.prompt('处理说明（可留空）', '关闭工单',
-      { confirmButtonText: '确定', cancelButtonText: '取消' })
-    await api.post(`/tickets/${current.value.id}/close`, { comment: value || '' })
-    ElMessage.success('工单已关闭')
+    const { value } = await ElMessageBox.prompt(
+      '处理方案（必填）：将记录为该工单的最终解决方案，并回流给检索 Agent 用于后续相似工单',
+      '关闭工单', { confirmButtonText: '确认关闭', cancelButtonText: '取消',
+        inputValidator: v => (v && v.trim()) ? true : '处理方案不能为空' })
+    await api.post(`/tickets/${current.value.id}/close`, { comment: value.trim() })
+    ElMessage.success('工单已关闭，处理方案已记录')
     fetchList()
     current.value = await api.get(`/tickets/${current.value.id}`)
   } catch (e) {
@@ -247,6 +256,7 @@ onUnmounted(() => clearInterval(timer))
 h4 { margin: 18px 0 8px; color: #303133; }
 .block { background: #f8fafc; border-radius: 6px; padding: 10px 12px; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
 .draft { border: 1px dashed #c6e2ff; background: #f0f7ff; }
+.resolved { border: 1px solid #b3e19d; background: #f0f9eb; }
 .subtasks { padding-left: 22px; font-size: 13px; line-height: 2; }
 .hit { background: #f8fafc; border-left: 3px solid #79bbff; padding: 8px 10px; margin: 6px 0; font-size: 12.5px; border-radius: 0 6px 6px 0; }
 .note { color: #909399; font-size: 12px; margin-top: 2px; }

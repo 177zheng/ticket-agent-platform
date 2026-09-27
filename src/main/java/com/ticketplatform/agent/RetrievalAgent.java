@@ -74,9 +74,18 @@ public class RetrievalAgent {
                 .sorted(Comparator.comparingDouble(Scored::score).reversed())
                 .limit(topK)
                 .map(s -> new RetrievalResult.SimilarTicketHit(
-                        s.t().getId(), s.t().getTitle(),
-                        s.t().getReplyDraft() != null ? firstLine(s.t().getReplyDraft()) : "（历史工单无解决方案记录）"))
+                        s.t().getId(), s.t().getTitle(), resolutionOf(s.t())))
                 .toList();
+    }
+
+    /**
+     * 相似工单的解决方式：优先取 resolution（人工处理方案/最终回复），
+     * 兼容老数据回退 replyDraft——人工处理经验由此回流给回复 Agent。
+     */
+    private static String resolutionOf(Ticket t) {
+        String text = t.getResolution() != null ? t.getResolution() : t.getReplyDraft();
+        if (text == null) return "（历史工单无解决方案记录）";
+        return firstLine(text);
     }
 
     private static String firstLine(String text) {

@@ -28,7 +28,7 @@ public final class Requests {
     }
 
     public record CloseRequest(
-            @Size(max = 500, message = "处理说明最长 500 字")
+            @NotBlank(message = "处理方案不能为空（将记录为工单的最终解决方案）") @Size(max = 1000)
             String comment) {
     }
 

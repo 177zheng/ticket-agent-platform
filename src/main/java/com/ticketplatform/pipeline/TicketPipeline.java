@@ -182,6 +182,7 @@ public class TicketPipeline {
             case AUTO_REPLY -> {
                 sendMailSafely(ticket);
                 ticket.setResolvedAt(java.time.LocalDateTime.now());
+                ticket.setResolution(ticket.getReplyDraft());
                 transitions.transition(ticket, TicketStatus.RESOLVED, "SYSTEM",
                         "智能体自动回复邮件并关单（置信度=" + ticket.getReplyConfidence() + "）");
             }

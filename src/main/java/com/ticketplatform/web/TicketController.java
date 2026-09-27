@@ -123,6 +123,7 @@ public class TicketController {
                     "[已解决] 工单#" + ticket.getId() + "：" + ticket.getTitle(),
                     ticket.getReplyDraft());
             ticket.setResolvedAt(LocalDateTime.now());
+            ticket.setResolution(ticket.getReplyDraft());
             ticket = transitions.transition(ticket, TicketStatus.RESOLVED, "HUMAN",
                     "管理员审核通过，回复已发送" + comment);
         } else {
@@ -132,7 +133,7 @@ public class TicketController {
         return view(ticket);
     }
 
-    /** 转人工工单处理完毕后关闭 —— 仅管理员 */
+    /** 转人工工单处理完毕后关闭 —— 仅管理员。comment 即人工处理方案，落 resolution 供检索 Agent 回流 */
     @PostMapping("/{id}/close")
     @PreAuthorize("hasRole('ADMIN')")
     public TicketView close(@PathVariable Long id, @Valid @RequestBody Requests.CloseRequest req) {
@@ -142,9 +143,9 @@ public class TicketController {
                     "只有 ESCALATED 状态的工单才能关闭，当前：" + ticket.getStatus());
         }
         ticket.setResolvedAt(LocalDateTime.now());
-        String comment = (req.comment() == null || req.comment().isBlank()) ? "" : "：" + req.comment();
+        ticket.setResolution(req.comment());
         ticket = transitions.transition(ticket, TicketStatus.RESOLVED, "HUMAN",
-                "人工处理完毕，关闭工单" + comment);
+                "人工处理完毕，关闭工单：" + req.comment());
         return view(ticket);
     }
 

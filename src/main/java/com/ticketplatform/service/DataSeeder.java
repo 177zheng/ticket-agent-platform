@@ -180,6 +180,7 @@ public class DataSeeder implements CommandLineRunner {
         t.setTriageConfidence(0.9);
         t.setTriageSummary("历史工单（种子数据）");
         t.setReplyDraft(replyDraft);
+        t.setResolution(replyDraft);
         t.setResolvedAt(java.time.LocalDateTime.now().minusDays(3 + (long) (Math.random() * 30)));
         ticketRepository.save(t);
     }

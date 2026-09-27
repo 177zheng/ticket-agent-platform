@@ -56,6 +56,10 @@ public class Ticket {
     private SuggestedAction suggestedAction;
     private Double replyConfidence;
 
+    /** 最终处理方案：自动回复=回复内容；人工审核通过=所发回复；转人工关闭=人工填写的方案。供检索 Agent 做相似工单回流。 */
+    @Column(columnDefinition = "TEXT")
+    private String resolution;
+
     // ---- 状态与失败信息 ----
     @Enumerated(EnumType.STRING)
     private TicketStatus status = TicketStatus.NEW;
@@ -128,6 +132,9 @@ public class Ticket {
 
     public Double getReplyConfidence() { return replyConfidence; }
     public void setReplyConfidence(Double replyConfidence) { this.replyConfidence = replyConfidence; }
+
+    public String getResolution() { return resolution; }
+    public void setResolution(String resolution) { this.resolution = resolution; }
 
     public TicketStatus getStatus() { return status; }
     public void setStatus(TicketStatus status) { this.status = status; }
