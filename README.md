@@ -125,7 +125,7 @@ ticket-agent-platform/
     └── src/views/               Dashboard / Tickets / Knowledge / Login / Register
 ```
 
-## 简历 / 面试亮点
+## 技术亮点与设计取舍
 
 - **多智能体编排**：规划→检索→回复三段式 Agent 流水线，每阶段独立事务（REQUIRES_NEW），任一阶段失败落 FAILED 并支持**断点续跑**（已完成阶段结果持久化复用，不重算）
 - **状态机驱动的业务闭环**：工单 8 状态全流转经统一入口校验（非法流转直接拒绝），每次变化写审计事件表，前端时间线完整回放"谁在何时做了什么"
