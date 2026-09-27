@@ -1,0 +1,44 @@
+# 一键启动整套系统：应用 + MySQL
+#   docker compose up -d --build   →  浏览器访问 http://127.0.0.1:8080 （admin / admin123）
+#   docker compose logs -f app     →  看应用日志
+#   docker compose down            →  停止（数据保留在 ./data 与命名卷中）
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: ticket-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: ticketdb            # 容器首次启动自动建库
+    command:
+      - --character-set-server=utf8mb4    # 中文必须
+      - --collation-server=utf8mb4_general_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:                          # app 等 MySQL 真正可用后才启动
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-proot123"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # 不映射宿主机端口：仅供内部网络访问，避免和本机已有 MySQL(3306) 冲突
+
+  app:
+    build: .
+    container_name: ticket-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      # 指向 compose 内部网络的服务名 mysql（覆盖 application.yml 里的 localhost）
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ticketdb?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASSWORD: root123
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data                  # 头像等文件持久化到宿主机
+    restart: unless-stopped
+
+volumes:
+  mysql-data:

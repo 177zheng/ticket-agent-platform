@@ -2,7 +2,9 @@
 
 多 Agent 协同自动处理企业 IT 工单：**规划 Agent** 拆解分类工单，**检索 Agent** 查运维手册（RAG）和历史相似工单，**回复 Agent** 生成回复草稿并给出处置建议，支持自动回复、人工审核、转人工的完整业务闭环，含状态机流转审计与失败重试。
 
-**技术栈**：Java 21 · Spring Boot 3.5 · Spring Data JPA · H2/PostgreSQL · Vue 3 · Vite · Element Plus · ECharts
+**技术栈**：Java 21 · Spring Boot 3.5 · Spring Data JPA · H2/MySQL/PostgreSQL · Vue 3 · Vite · Element Plus · ECharts
+
+[![CI](https://github.com/177zheng/ticket-agent-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/177zheng/ticket-agent-platform/actions/workflows/ci.yml)
 
 ![技术架构](https://img.shields.io/badge/后端-Spring%20Boot%203.5-6DB33F) ![前端](https://img.shields.io/badge/前端-Vue3%20%2B%20Element%20Plus-42b883) ![Agent](https://img.shields.io/badge/Agent-多智能体流水线-blue)
 
@@ -30,13 +32,28 @@
 
 ## 快速开始
 
-要求：JDK 21+、Maven 3.6.3+、Node 16+（仅前端开发时需要）。仓库已包含前端构建产物，**后端一条命令即可跑起完整系统**：
+三选一，从快到重：
+
+**方式 A：Docker 一键启动（推荐，什么都不用装）**
 
 ```bash
-cd ticket-agent-platform
+docker compose up -d --build
+# 浏览器访问 http://127.0.0.1:8080（admin / admin123）
+```
+
+自动完成：多阶段构建镜像（Maven 编译 → JRE 运行）→ 启动 MySQL 8（utf8mb4、自动建库）→ 等健康检查通过后启动应用。头像与数据落在宿主机 `./data` 和命名卷，`docker compose down` 不丢数据。
+
+**方式 B：本机 JDK 直接跑**（要求 JDK 21+、Maven 3.6.3+；仓库已含前端构建产物）：
+
+```bash
 mvn -DskipTests package
 java -jar target/ticket-agent-platform-0.1.0-SNAPSHOT.jar
-# 打开 http://127.0.0.1:8080 （前端+后端同一个进程）
+```
+
+**方式 C：前端开发模式**（Node 16+）：
+
+```bash
+cd frontend && npm install --registry=https://registry.npmmirror.com && npm run dev
 ```
 
 首次启动自动灌入 **默认管理员 + 6 篇运维手册 + 6 条历史工单**。

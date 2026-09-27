@@ -1,0 +1,11 @@
+# 构建镜像只需要 pom.xml + src/（前端产物已在 static 里），其余全部排除
+.git/
+.idea/
+target/
+data/
+frontend/
+docs/
+*.md
+*.log
+*.bat
+app*.log
