@@ -44,6 +44,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "无权限执行该操作"));
     }
 
+    /** 业务参数错误（如头像格式/大小不符），返回 400 */
+    @ExceptionHandler({IllegalArgumentException.class,
+            org.springframework.web.multipart.MaxUploadSizeExceededException.class})
+    public ResponseEntity<Map<String, String>> onBadRequest(Exception e) {
+        String msg = e instanceof org.springframework.web.multipart.MaxUploadSizeExceededException
+                ? "上传文件过大（头像不超过 2MB）" : e.getMessage();
+        return ResponseEntity.badRequest().body(Map.of("error", msg));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> onGeneric(Exception e) {
         log.error("未处理异常", e);

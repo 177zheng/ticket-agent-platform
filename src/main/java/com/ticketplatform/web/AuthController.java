@@ -5,6 +5,7 @@ import com.ticketplatform.domain.User;
 import com.ticketplatform.repo.UserRepository;
 import com.ticketplatform.security.CurrentUser;
 import com.ticketplatform.security.JwtService;
+import com.ticketplatform.service.AvatarService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -32,11 +33,14 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AvatarService avatarService;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                          JwtService jwtService, AvatarService avatarService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.avatarService = avatarService;
     }
 
     public record RegisterRequest(
@@ -125,6 +129,17 @@ public class AuthController {
         return Map.of("message", "密码已修改");
     }
 
+    /** 上传头像：multipart 表单，字段名 file；png/jpg/jpeg/gif/webp，≤2MB */
+    @PostMapping(value = "/avatar", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Map<String, Object> uploadAvatar(@org.springframework.web.bind.annotation.RequestParam("file")
+                                            org.springframework.web.multipart.MultipartFile file) {
+        User user = currentUser();
+        String url = avatarService.save(user.getUsername(), file);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("avatarUrl", url);
+        return result;
+    }
+
     private User currentUser() {
         String username = CurrentUser.username();
         if (username == null) {
@@ -148,6 +163,7 @@ public class AuthController {
         info.put("role", user.getRole().name());
         info.put("roleLabel", user.getRole().getLabel());
         info.put("createdAt", user.getCreatedAt().toString());
+        info.put("avatarUrl", avatarService.avatarUrl(user.getUsername()));
         return info;
     }
 }

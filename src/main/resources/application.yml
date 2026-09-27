@@ -18,6 +18,10 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  servlet:
+    multipart:
+      max-file-size: 2MB       # 头像上传限制（后端另有二次校验）
+      max-request-size: 5MB
 
 app:
   llm:

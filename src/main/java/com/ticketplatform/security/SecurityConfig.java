@@ -49,6 +49,8 @@ public class SecurityConfig {
                                 "/login", "/register", "/tickets", "/knowledge", "/profile",
                                 "/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // 头像图片：同源 <img> 加载不带 token，开放 GET
+                        .requestMatchers(HttpMethod.GET, "/avatars/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> writeJson(res, 401, JSON_401))

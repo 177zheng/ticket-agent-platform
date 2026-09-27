@@ -34,7 +34,9 @@
 
         <el-dropdown class="user" @command="onUserCommand">
           <span class="user-info">
-            <el-avatar :size="28" style="background:#409eff">{{ auth?.name?.slice(0, 1) }}</el-avatar>
+            <el-avatar :size="28" :src="auth?.avatarUrl || undefined" style="background:#409eff">
+              {{ auth?.name?.slice(0, 1) }}
+            </el-avatar>
             <span class="user-name">{{ auth?.name }}</span>
             <el-tag size="small" :type="isAdmin() ? 'danger' : 'success'">{{ auth?.roleLabel }}</el-tag>
           </span>

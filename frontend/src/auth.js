@@ -13,6 +13,13 @@ function read() {
 
 const authState = ref(read())
 
+// 多标签页同步：本页修改头像/信息后，其他标签页即时刷新登录态
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', e => {
+    if (e.key === KEY) authState.value = read()
+  })
+}
+
 export function getAuth() {
   return authState.value
 }

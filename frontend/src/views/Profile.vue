@@ -4,6 +4,18 @@
     <el-col :span="12">
       <el-card shadow="hover">
         <template #header>👤 个人信息</template>
+        <div class="avatar-row">
+          <el-avatar :size="72" :src="me.avatarUrl || undefined" class="avatar-img">
+            {{ (me.name || '?').slice(0, 1) }}
+          </el-avatar>
+          <div>
+            <el-upload :show-file-list="false" accept="image/png,image/jpeg,image/gif,image/webp"
+                       :before-upload="beforeAvatar" :http-request="doUploadAvatar">
+              <el-button :loading="uploading">{{ me.avatarUrl ? '更换头像' : '上传头像' }}</el-button>
+            </el-upload>
+            <div class="tip">支持 png/jpg/gif/webp，不超过 2MB</div>
+          </div>
+        </div>
         <el-form label-width="90px" style="max-width:420px">
           <el-form-item label="用户名">
             <el-input :model-value="me.username" disabled />
@@ -65,6 +77,31 @@ const form = ref({ name: '', email: '' })
 const pwd = ref({ oldPassword: '', newPassword: '', confirm: '' })
 const saving = ref(false)
 const changingPwd = ref(false)
+const uploading = ref(false)
+
+function beforeAvatar(file) {
+  if (file.size > 2 * 1024 * 1024) {
+    ElMessage.warning('图片不能超过 2MB')
+    return false
+  }
+  return true
+}
+
+async function doUploadAvatar({ file }) {
+  uploading.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    const r = await api.post('/auth/avatar', fd)
+    me.value.avatarUrl = r.avatarUrl
+    patchAuth({ avatarUrl: r.avatarUrl })
+    ElMessage.success('头像已更新')
+  } catch (e) {
+    ElMessage.error(e.message)
+  } finally {
+    uploading.value = false
+  }
+}
 
 onMounted(async () => {
   // 以服务端为准刷新一次（拿注册时间等本地没有的字段）
@@ -124,4 +161,6 @@ async function savePassword() {
 
 <style scoped>
 .tip { font-size: 12px; color: #909399; line-height: 1.6; }
+.avatar-row { display: flex; align-items: center; gap: 18px; margin: 6px 0 18px; }
+.avatar-img { background: #409eff; font-size: 26px; flex-shrink: 0; }
 </style>
