@@ -50,6 +50,24 @@ logging:
     org.hibernate.SQL: warn
 
 ---
+# 切换 MySQL（本机 5.7+）：--spring.profiles.active=mysql
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: jdbc:mysql://localhost:3306/ticketdb?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:123456}
+  jpa:
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: false
+
+---
 # 切换 PostgreSQL：--spring.profiles.active=postgres
 spring:
   config:

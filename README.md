@@ -75,11 +75,20 @@ java -jar target/*.jar --app.llm.mode=openai --app.llm.model=glm-4.6
 
 DeepSeek：`--app.llm.base-url=https://api.deepseek.com`；本地 Ollama：`--app.llm.base-url=http://localhost:11434/v1`。
 
-### 换 PostgreSQL
+### 换数据库：MySQL / PostgreSQL
+
+默认用嵌入式 H2（零配置）；三选一，只差一个启动参数：
 
 ```bash
+# 本机 MySQL（需先建库: CREATE DATABASE ticketdb DEFAULT CHARACTER SET utf8mb4;）
+java -jar target/*.jar --spring.profiles.active=mysql
+#   连接默认 root/123456，可用 DB_USER / DB_PASSWORD 环境变量覆盖
+
+# PostgreSQL
 java -jar target/*.jar --spring.profiles.active=postgres
 ```
+
+切换后是全新空库（自动建表+重新灌种子数据），H2 的旧数据文件 `data/ticketdb.mv.db` 仍保留、互不影响；去掉启动参数即回到 H2。Windows 下也可直接双击 `start.bat`（H2）或 `start-mysql.bat`（MySQL）。
 
 ## API 一览
 
