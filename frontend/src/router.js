@@ -5,6 +5,7 @@ import Tickets from './views/Tickets.vue'
 import Knowledge from './views/Knowledge.vue'
 import Login from './views/Login.vue'
 import Register from './views/Register.vue'
+import Profile from './views/Profile.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -13,7 +14,8 @@ const router = createRouter({
     { path: '/tickets', name: 'tickets', component: Tickets, meta: { title: '工单管理' } },
     { path: '/knowledge', name: 'knowledge', component: Knowledge, meta: { title: '知识库', adminOnly: true } },
     { path: '/login', name: 'login', component: Login, meta: { title: '登录', public: true } },
-    { path: '/register', name: 'register', component: Register, meta: { title: '注册', public: true } }
+    { path: '/register', name: 'register', component: Register, meta: { title: '注册', public: true } },
+    { path: '/profile', name: 'profile', component: Profile, meta: { title: '个人信息' } }
   ]
 })
 

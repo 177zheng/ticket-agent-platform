@@ -56,4 +56,9 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public Role getRole() { return role; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    /** 修改密码（传入的是 BCrypt 后的哈希） */
+    public void changePassword(String passwordHash) {
+        this.password = passwordHash;
+    }
 }

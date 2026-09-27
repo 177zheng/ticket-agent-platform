@@ -35,7 +35,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import api from '../api'
-import { saveAuth } from '../auth'
+import { setAuth } from '../auth'
 
 const router = useRouter()
 const form = ref({ username: '', name: '', email: '', password: '' })
@@ -54,7 +54,7 @@ async function submit() {
   loading.value = true
   try {
     const data = await api.post('/auth/register', f)
-    saveAuth(data)
+    setAuth(data)
     ElMessage.success(`注册成功，欢迎 ${data.name}`)
     router.push('/')
   } catch (e) {

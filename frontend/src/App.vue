@@ -15,6 +15,9 @@
         <el-menu-item v-if="isAdmin()" index="/knowledge">
           <el-icon><Collection /></el-icon><span>知识库</span>
         </el-menu-item>
+        <el-menu-item index="/profile">
+          <el-icon><User /></el-icon><span>个人信息</span>
+        </el-menu-item>
       </el-menu>
       <div class="aside-footer">
         <el-tag size="small" :type="llmMode === 'mock' ? 'info' : 'success'">
@@ -53,13 +56,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Odometer, Tickets, Collection } from '@element-plus/icons-vue'
+import { Odometer, Tickets, Collection, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import api from './api'
 import { getAuth, clearAuth, isAdmin } from './auth'
 
 const router = useRouter()
-const auth = ref(getAuth())
+const auth = getAuth()
 const llmMode = ref('mock')
 
 onMounted(async () => {

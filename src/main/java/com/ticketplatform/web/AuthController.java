@@ -90,6 +90,50 @@ public class AuthController {
         return userInfo(user);
     }
 
+    public record ProfileRequest(
+            @NotBlank @Size(max = 50, message = "姓名最长 50 字")
+            String name,
+            @NotBlank @Email(message = "邮箱格式不正确")
+            String email) {
+    }
+
+    public record PasswordRequest(
+            @NotBlank String oldPassword,
+            @NotBlank @Size(min = 6, max = 64, message = "新密码长度需 6-64 位")
+            String newPassword) {
+    }
+
+    /** 修改个人信息：仅姓名/邮箱；用户名与角色不允许自行变更 */
+    @PutMapping("/profile")
+    public Map<String, Object> updateProfile(@Valid @RequestBody ProfileRequest req) {
+        User user = currentUser();
+        user.setName(req.name());
+        user.setEmail(req.email());
+        userRepository.save(user);
+        return userInfo(user);
+    }
+
+    /** 修改密码：需验证原密码 */
+    @PutMapping("/password")
+    public Map<String, Object> changePassword(@Valid @RequestBody PasswordRequest req) {
+        User user = currentUser();
+        if (!passwordEncoder.matches(req.oldPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "原密码不正确");
+        }
+        user.changePassword(passwordEncoder.encode(req.newPassword()));
+        userRepository.save(user);
+        return Map.of("message", "密码已修改");
+    }
+
+    private User currentUser() {
+        String username = CurrentUser.username();
+        if (username == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未登录");
+        }
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "用户不存在"));
+    }
+
     private Map<String, Object> loginResult(User user) {
         Map<String, Object> result = new LinkedHashMap<>(userInfo(user));
         result.put("token", jwtService.issue(user.getUsername(), user.getRole()));
@@ -103,6 +147,7 @@ public class AuthController {
         info.put("email", user.getEmail());
         info.put("role", user.getRole().name());
         info.put("roleLabel", user.getRole().getLabel());
+        info.put("createdAt", user.getCreatedAt().toString());
         return info;
     }
 }
