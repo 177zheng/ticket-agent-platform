@@ -32,6 +32,14 @@ public final class Requests {
             String comment) {
     }
 
+    /** 提单人对处理结果的反馈：不满意则重开转人工 */
+    public record FeedbackRequest(
+            @NotNull(message = "satisfied 不能为空")
+            Boolean satisfied,
+            @Size(max = 500, message = "反馈说明最长 500 字")
+            String reason) {
+    }
+
     public record ManualRequest(
             @NotBlank(message = "手册标题不能为空") @Size(max = 200)
             String title,

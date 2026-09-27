@@ -133,6 +133,31 @@ public class TicketController {
         return view(ticket);
     }
 
+    /**
+     * 提单人对处理结果的反馈：不满意 → 工单重开转人工重新处理（仅工单创建人或管理员）。
+     * 人工纠正后重新关闭会用新的处理方案覆盖 resolution，错误答案在知识回流中被修正。
+     */
+    @PostMapping("/{id}/feedback")
+    public TicketView feedback(@PathVariable Long id, @Valid @RequestBody Requests.FeedbackRequest req) {
+        Ticket ticket = loadAndCheckPermission(id);
+        if (ticket.getStatus() != TicketStatus.RESOLVED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "只有已解决的工单才能评价，当前：" + ticket.getStatus());
+        }
+        if (Boolean.TRUE.equals(req.satisfied())) {
+            transitions.recordNote(ticket, "HUMAN",
+                    "提单人对处理结果表示满意" + (req.reason() == null || req.reason().isBlank()
+                            ? "" : "：" + req.reason()));
+            return view(ticket);
+        }
+        if (req.reason() == null || req.reason().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "请填写不满意的原因");
+        }
+        ticket = transitions.transition(ticket, TicketStatus.ESCALATED, "HUMAN",
+                "提单人对处理结果不满意，工单重开转人工：" + req.reason());
+        return view(ticket);
+    }
+
     /** 转人工工单处理完毕后关闭 —— 仅管理员。comment 即人工处理方案，落 resolution 供检索 Agent 回流 */
     @PostMapping("/{id}/close")
     @PreAuthorize("hasRole('ADMIN')")

@@ -8,6 +8,7 @@ import java.util.Set;
  *
  * NEW → TRIAGING → RETRIEVING → DRAFTING → HUMAN_REVIEW → RESOLVED
  *                                                  └──────→ ESCALATED → RESOLVED(人工关闭)
+ * RESOLVED →(提单人不满意)→ ESCALATED →(人工重新处理)→ RESOLVED   ← 工单重开闭环
  * 任意执行阶段失败 → FAILED，可通过重试接口从失败步骤断点续跑（FAILED → 对应工作状态）。
  */
 public enum TicketStatus {
@@ -28,7 +29,8 @@ public enum TicketStatus {
             HUMAN_REVIEW, Set.of(RESOLVED, ESCALATED),
             ESCALATED, Set.of(RESOLVED),
             FAILED, Set.of(TRIAGING, RETRIEVING, DRAFTING),
-            RESOLVED, Set.of()
+            // 工单重开：提单人对处理结果不满意 → 转人工重新处理
+            RESOLVED, Set.of(ESCALATED)
     );
 
     private final String label;
@@ -45,7 +47,7 @@ public enum TicketStatus {
         return TRANSITIONS.getOrDefault(this, Set.of()).contains(target);
     }
 
-    /** 是否终态（不可再流转）。ESCALATED 允许人工处理后关闭，因此不算终态。 */
+    /** Agent 流水线是否不再处理（已解决工单仅可经"不满意重开"转人工，不会重回流水线）。 */
     public boolean isTerminal() {
         return this == RESOLVED;
     }

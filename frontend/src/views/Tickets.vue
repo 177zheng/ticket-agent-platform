@@ -64,15 +64,17 @@
         <el-alert v-if="current.errorMessage" type="error" :closable="false" show-icon
                   :title="`失败阶段 ${current.failedStep}`" :description="current.errorMessage" style="margin-bottom:12px" />
 
-        <div class="actions" v-if="isAdmin()">
-          <el-button v-if="current.status === 'HUMAN_REVIEW'" type="success"
+        <div class="actions" v-if="isAdmin() || true">
+          <el-button v-if="current.status === 'HUMAN_REVIEW' && isAdmin()" type="success"
                      @click="review(true)">✓ 审核通过并发送回复</el-button>
-          <el-button v-if="current.status === 'HUMAN_REVIEW'" type="warning" plain
+          <el-button v-if="current.status === 'HUMAN_REVIEW' && isAdmin()" type="warning" plain
                      @click="review(false)">✗ 驳回，转人工</el-button>
-          <el-button v-if="current.status === 'FAILED'" type="primary"
+          <el-button v-if="current.status === 'FAILED' && isAdmin()" type="primary"
                      @click="retry">⟳ 重试（断点续跑）</el-button>
-          <el-button v-if="current.status === 'ESCALATED'" type="success" plain
+          <el-button v-if="current.status === 'ESCALATED' && isAdmin()" type="success" plain
                      @click="closeTicket">人工已处理，关闭工单</el-button>
+          <el-button v-if="current.status === 'RESOLVED'" type="danger" plain
+                     @click="feedback">👎 对结果不满意？转人工重处理</el-button>
         </div>
 
         <el-descriptions :column="2" border size="small">
@@ -219,6 +221,21 @@ async function retry() {
     ElMessage.success('已触发重试')
     fetchList()
   } catch (e) { ElMessage.error(e.message) }
+}
+
+async function feedback() {
+  try {
+    const { value } = await ElMessageBox.prompt(
+      '请说明哪里不对/没解决（必填）：工单将重开转人工处理，人工纠正后的方案会替换原方案',
+      '对处理结果不满意', { confirmButtonText: '转人工重处理', cancelButtonText: '取消',
+        inputValidator: v => (v && v.trim()) ? true : '请填写不满意的原因' })
+    await api.post(`/tickets/${current.value.id}/feedback`, { satisfied: false, reason: value.trim() })
+    ElMessage.success('工单已重开，转人工处理')
+    fetchList()
+    current.value = await api.get(`/tickets/${current.value.id}`)
+  } catch (e) {
+    if (e !== 'cancel' && e?.message) ElMessage.error(e.message)
+  }
 }
 
 async function closeTicket() {
